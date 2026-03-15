@@ -1,0 +1,41 @@
+# styles.py
+"""
+Color styling of application
+"""
+
+COLORS = {
+    'bg': '#1a1a2e',
+    'panel': '#16213e',
+    'panel_light': '#1c2a4a',
+    'accent': '#e94560',
+    'accent2': '#0f3460',
+    'text': '#e0e0e0',
+    'text_dim': '#8892a4',
+    'text_bright': '#ffffff',
+    'entry_bg': '#0f1a30',
+    'entry_fg': '#e0e0e0',
+    'canvas_bg': '#0d1117',
+    'grid_line': '#1e2a3a',
+    'workspace': '#1a2332',
+    'obstacle': '#e94560',
+    'obstacle_fill': '#5c1a2a',
+    'robot_init': '#4fc3f7',
+    'robot_init_f': '#1a3a4a',
+    'robot_final': '#66bb6a',
+    'robot_final_f': '#1a3a2a',
+    'c_obstacle': '#ff6b6b',
+    'c_obstacle_f': '#4a1a1a',
+    'c_boundary': '#bb86fc',
+    'cell_free': '#1a2332',
+    'cell_occ': '#2a0a0a',
+    'cell_semi': '#3a3520',
+    'cell_free_b': '#2a3a4a',
+    'cell_occ_b': '#5c1a1a',
+    'cell_semi_b': '#6a6030',
+    'success': '#66bb6a',
+    'warning': '#ffca28',
+    'error': '#ef5350',
+    'btn_primary': '#e94560',
+    'btn_secondary': '#1a4a7a',
+    'btn_hover': '#ff6b81',
+}
