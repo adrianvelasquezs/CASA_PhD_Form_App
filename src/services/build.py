@@ -150,7 +150,7 @@ def main() -> int:
 
     print()
     subprocess.run(command, check=True)
-    print(f'\nBuild complete → {output_file}')
+    print(f'\nBuild complete -> {output_file}')
     return 0
 
 
