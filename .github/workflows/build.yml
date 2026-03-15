@@ -1,0 +1,98 @@
+name: Build executables
+
+# Trigger on every push to main/master and on version tags (e.g. v1.0.0).
+# You can also trigger manually from the Actions tab with workflow_dispatch.
+on:
+  push:
+    branches: [main, master]
+    tags:     ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build — ${{ matrix.os-label }}
+    strategy:
+      fail-fast: false          # keep both jobs running even if one fails
+      matrix:
+        include:
+          - os: macos-latest
+            os-label: macOS
+            artifact-name: casa_phd_form-macos
+            binary: casa_phd_form
+
+          - os: windows-latest
+            os-label: Windows
+            artifact-name: casa_phd_form-windows
+            binary: casa_phd_form.exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build executable
+        run: python src/services/build.py --name casa_phd_form
+
+      - name: Verify binary exists
+        shell: bash
+        run: |
+          if [ -f "${{ matrix.binary }}" ]; then
+            echo "Binary found: ${{ matrix.binary }}"
+          else
+            echo "Binary NOT found!" && exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.binary }}
+          retention-days: 30
+
+  # Optional: create a GitHub Release and attach both binaries when a v* tag is pushed.
+  release:
+    name: Create release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download macOS binary
+        uses: actions/download-artifact@v4
+        with:
+          name: casa_phd_form-macos
+          path: dist/
+
+      - name: Download Windows binary
+        uses: actions/download-artifact@v4
+        with:
+          name: casa_phd_form-windows
+          path: dist/
+
+      - name: Rename artifacts for release
+        run: |
+          mv dist/casa_phd_form     dist/casa_phd_form-macos
+          mv dist/casa_phd_form.exe dist/casa_phd_form-windows.exe
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/casa_phd_form-macos
+            dist/casa_phd_form-windows.exe
+

@@ -6,3 +6,12 @@
 data/
 *.xlsx
 *.csv
+
+# Python
+.pyinstaller/
+
+# App
+*.app
+*.exe
+*.dmg
+casa_phd_form
