@@ -1,0 +1,8 @@
+# IDE
+.idea
+.vscode/
+
+# Data
+data/
+*.xlsx
+*.csv
