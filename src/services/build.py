@@ -10,7 +10,7 @@ workflow at .github/workflows/build.yml, which spins up a native runner
 for each OS in parallel.
 
 This script is the single build entry-point used both locally and by CI:
-  - Run it on macOS  → produces  <root>/casa_phd_form
+  - Run it on macOS  → produces  <root>/casa_phd_form.app
   - Run it on Windows → produces <root>/casa_phd_form.exe
 
 Local usage:
@@ -28,10 +28,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-
-# Separator used in PyInstaller --add-data / --paths arguments
-_SEP = ';' if sys.platform.startswith('win') else ':'
-
 
 def _detect_platform() -> str:
     if sys.platform.startswith('win'):
@@ -80,10 +76,17 @@ def _remove_if_exists(path: Path) -> None:
 def _clean_artifacts(root_dir: Path, app_name: str) -> None:
     _remove_if_exists(root_dir / '.pyinstaller')
     _remove_if_exists(root_dir / app_name)
+    _remove_if_exists(root_dir / f'{app_name}.app')
     _remove_if_exists(root_dir / f'{app_name}.exe')
 
 
-def _build_command(root_dir: Path, app_name: str, clean_build: bool) -> list[str]:
+def _output_path(root_dir: Path, app_name: str, host_platform: str) -> Path:
+    if host_platform == 'windows':
+        return root_dir / f'{app_name}.exe'
+    return root_dir / f'{app_name}.app'
+
+
+def _build_command(root_dir: Path, app_name: str, clean_build: bool, host_platform: str) -> list[str]:
     entrypoint = root_dir / 'src' / 'main.py'
     if not entrypoint.exists():
         raise FileNotFoundError(f'Entrypoint not found: {entrypoint}')
@@ -95,7 +98,6 @@ def _build_command(root_dir: Path, app_name: str, clean_build: bool) -> list[str
     command = [
         sys.executable, '-m', 'PyInstaller',
         '--noconfirm',
-        '--onefile',
         '--windowed',
         '--name', app_name,
         # output the finished binary directly into the project root
@@ -109,6 +111,13 @@ def _build_command(root_dir: Path, app_name: str, clean_build: bool) -> list[str
         '--hidden-import', 'pandas',
         str(entrypoint),
     ]
+
+    if host_platform == 'windows':
+        command.insert(4, '--onefile')
+    else:
+        command.extend([
+            '--osx-bundle-identifier', 'co.uniandes.casa.phdform',
+        ])
 
     if clean_build:
         command.insert(3, '--clean')
@@ -128,8 +137,7 @@ def main() -> int:
     root_dir    = Path(__file__).resolve().parents[2]
     clean_build = not args.no_clean
 
-    suffix      = '.exe' if host_platform == 'windows' else ''
-    output_file = root_dir / f'{args.name}{suffix}'
+    output_file = _output_path(root_dir=root_dir, app_name=args.name, host_platform=host_platform)
 
     print(f'Host OS      : {platform.system()} ({host_platform})')
     print(f'Project root : {root_dir}')
@@ -139,7 +147,12 @@ def main() -> int:
         print('Cleaning previous artifacts...')
         _clean_artifacts(root_dir=root_dir, app_name=args.name)
 
-    command = _build_command(root_dir=root_dir, app_name=args.name, clean_build=clean_build)
+    command = _build_command(
+        root_dir=root_dir,
+        app_name=args.name,
+        clean_build=clean_build,
+        host_platform=host_platform,
+    )
 
     print('\nPyInstaller command:')
     print(' '.join(command))

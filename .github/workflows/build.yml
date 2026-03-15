@@ -20,12 +20,14 @@ jobs:
           - os: macos-latest
             os-label: macOS
             artifact-name: casa_phd_form-macos
-            binary: casa_phd_form
+            binary: casa_phd_form.app
+            packaged-artifact: casa_phd_form-macos.zip
 
           - os: windows-latest
             os-label: Windows
             artifact-name: casa_phd_form-windows
             binary: casa_phd_form.exe
+            packaged-artifact: casa_phd_form.exe
 
     runs-on: ${{ matrix.os }}
 
@@ -48,17 +50,23 @@ jobs:
       - name: Verify binary exists
         shell: bash
         run: |
-          if [ -f "${{ matrix.binary }}" ]; then
+          if [ -e "${{ matrix.binary }}" ]; then
             echo "Binary found: ${{ matrix.binary }}"
           else
             echo "Binary NOT found!" && exit 1
           fi
 
+      - name: Package macOS app
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent "${{ matrix.binary }}" "${{ matrix.packaged-artifact }}"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.binary }}
+          path: ${{ matrix.packaged-artifact }}
           retention-days: 30
 
   # Optional: create a GitHub Release and attach both binaries when a v* tag is pushed.
@@ -72,27 +80,22 @@ jobs:
       contents: write
 
     steps:
-      - name: Download macOS binary
+      - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
           name: casa_phd_form-macos
           path: dist/
 
-      - name: Download Windows binary
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: casa_phd_form-windows
           path: dist/
 
-      - name: Rename artifacts for release
-        run: |
-          mv dist/casa_phd_form     dist/casa_phd_form-macos
-          mv dist/casa_phd_form.exe dist/casa_phd_form-windows.exe
-
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/casa_phd_form-macos
-            dist/casa_phd_form-windows.exe
+            dist/casa_phd_form-macos.zip
+            dist/casa_phd_form.exe
 
