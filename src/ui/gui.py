@@ -12,7 +12,7 @@ import pandas as pd
 
 import services.utils as ut
 
-from public.styles import COLORS
+from public.styles import COLORS, FONTS, PADDING, SPACING
 
 
 # ====================================================================================================================
@@ -32,8 +32,8 @@ class PhdDataApp(tk.Tk):
         super().__init__()
         self.title("Transformación de datos PhD")
         self.configure(bg=COLORS['bg'])
-        self.geometry("500x500")
-        self.minsize(500, 500)
+        self.geometry("620x560")
+        self.minsize(560, 520)
 
         # ===================
         # Styling
@@ -43,31 +43,31 @@ class PhdDataApp(tk.Tk):
         style.configure('TFrame', background=COLORS['bg'])
         style.configure('Panel.TFrame', background=COLORS['panel'])
         style.configure('TLabel', background=COLORS['panel'], foreground=COLORS['text'],
-                        font=('Segoe UI', 10))
+                        font=FONTS['base'])
         style.configure('Title.TLabel', background=COLORS['panel'], foreground=COLORS['text_bright'],
-                        font=('Segoe UI', 13, 'bold'))
+                        font=FONTS['title'])
         style.configure('Section.TLabel', background=COLORS['panel'], foreground=COLORS['accent'],
-                        font=('Segoe UI', 11, 'bold'))
+                        font=FONTS['section'])
         style.configure('Small.TLabel', background=COLORS['panel'], foreground=COLORS['text_dim'],
-                        font=('Segoe UI', 9))
+                        font=FONTS['small'])
         style.configure('Status.TLabel', background=COLORS['bg'], foreground=COLORS['text_dim'],
-                        font=('Segoe UI', 9))
+                        font=FONTS['status'])
         style.configure('Result.TLabel', background=COLORS['panel'], foreground=COLORS['text'],
-                        font=('Consolas', 10))
+                        font=FONTS['result'])
         style.configure('Accent.TButton', background=COLORS['btn_primary'],
-                        foreground='white', font=('Segoe UI', 11, 'bold'),
-                        padding=(20, 10))
+                        foreground='white', font=FONTS['button_primary'],
+                        padding=PADDING['button_primary'])
         style.map('Accent.TButton',
                   background=[('active', COLORS['btn_hover']),
                               ('pressed', COLORS['accent'])])
         style.configure('Small.TButton', background=COLORS['accent2'],
-                        foreground=COLORS['text'], font=('Segoe UI', 9),
-                        padding=(8, 4))
+                        foreground=COLORS['text'], font=FONTS['button_secondary'],
+                        padding=PADDING['button_secondary'])
         style.map('Small.TButton',
                   background=[('active', COLORS['btn_secondary']),])
         style.configure('Nav.TButton', background=COLORS['panel_light'],
-                        foreground=COLORS['text'], font=('Segoe UI', 10, 'bold'),
-                        padding=(16, 8))
+                        foreground=COLORS['text'], font=FONTS['button_secondary'],
+                        padding=PADDING['button_nav'])
         style.map('Nav.TButton',
                   background=[('active', COLORS['accent2'])])
 
@@ -88,37 +88,51 @@ class PhdDataApp(tk.Tk):
     # UI construction
 
     def _build_ui(self):
-        self.main_frame = ttk.Frame(self, style='TFrame', padding=20)
+        self.main_frame = ttk.Frame(self, style='TFrame', padding=PADDING['app'])
         self.main_frame.pack(fill='both', expand=True)
 
-        panel = ttk.Frame(self.main_frame, style='Panel.TFrame', padding=20)
+        panel = ttk.Frame(self.main_frame, style='Panel.TFrame', padding=PADDING['panel'])
         panel.pack(fill='both', expand=True)
 
         ttk.Label(panel, text='Transformador de datos CASA', style='Title.TLabel').pack(anchor='w')
         ttk.Label(
             panel,
             text='Sube un archivo, procesa la información y guarda el resultado en la carpeta que elijas.',
-            style='Small.TLabel'
-        ).pack(anchor='w', pady=(4, 18))
+            style='Small.TLabel',
+            wraplength=520,
+            justify='left'
+        ).pack(anchor='w', pady=(SPACING['xs'], SPACING['lg']))
 
         upload_row = ttk.Frame(panel, style='Panel.TFrame')
-        upload_row.pack(fill='x', pady=6)
+        upload_row.pack(fill='x', pady=SPACING['sm'])
         ttk.Label(upload_row, text='Archivo de entrada:', style='Section.TLabel').pack(side='left')
         ttk.Button(upload_row, text='Seleccionar archivo', style='Small.TButton', command=self._pick_input_file).pack(
             side='right'
         )
-        ttk.Label(panel, textvariable=self.input_file_var, style='Result.TLabel').pack(fill='x', pady=(2, 12))
+        ttk.Label(
+            panel,
+            textvariable=self.input_file_var,
+            style='Result.TLabel',
+            wraplength=520,
+            justify='left'
+        ).pack(fill='x', pady=(SPACING['xs'], SPACING['md']))
 
         output_row = ttk.Frame(panel, style='Panel.TFrame')
-        output_row.pack(fill='x', pady=6)
+        output_row.pack(fill='x', pady=SPACING['sm'])
         ttk.Label(output_row, text='Carpeta de salida:', style='Section.TLabel').pack(side='left')
         ttk.Button(output_row, text='Elegir carpeta', style='Small.TButton', command=self._pick_output_dir).pack(
             side='right'
         )
-        ttk.Label(panel, textvariable=self.output_dir_var, style='Result.TLabel').pack(fill='x', pady=(2, 12))
+        ttk.Label(
+            panel,
+            textvariable=self.output_dir_var,
+            style='Result.TLabel',
+            wraplength=520,
+            justify='left'
+        ).pack(fill='x', pady=(SPACING['xs'], SPACING['md']))
 
         action_row = ttk.Frame(panel, style='Panel.TFrame')
-        action_row.pack(fill='x', pady=(6, 10))
+        action_row.pack(fill='x', pady=(SPACING['sm'], SPACING['md']))
 
         self.process_button = ttk.Button(
             action_row,
@@ -135,10 +149,16 @@ class PhdDataApp(tk.Tk):
             command=self._save_result,
             state='disabled'
         )
-        self.save_button.pack(side='left', padx=(10, 0))
+        self.save_button.pack(side='left', padx=(SPACING['sm'], 0))
 
-        ttk.Label(panel, text='Resultado', style='Section.TLabel').pack(anchor='w', pady=(12, 4))
-        ttk.Label(panel, textvariable=self.result_var, style='Result.TLabel', justify='left').pack(fill='x', pady=(0, 10))
+        ttk.Label(panel, text='Resultado', style='Section.TLabel').pack(anchor='w', pady=(SPACING['md'], SPACING['xs']))
+        ttk.Label(
+            panel,
+            textvariable=self.result_var,
+            style='Result.TLabel',
+            justify='left',
+            wraplength=520
+        ).pack(fill='x', pady=(0, SPACING['md']))
         ttk.Label(panel, textvariable=self.status_var, style='Status.TLabel').pack(anchor='w')
 
     # ===================
