@@ -13,6 +13,7 @@ def main():
         '\n>> Starting GUI...'
     )
     gui.run()
+    print("\n=== Application closed ===")
 
 if __name__ == '__main__':
     main()
