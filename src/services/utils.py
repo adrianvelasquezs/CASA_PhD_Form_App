@@ -117,7 +117,8 @@ def transpose(df: pd.DataFrame) -> pd.DataFrame:
     return melted_df
 
 
-CODE_PATTERN = re.compile(r'(?<!\d)\d+(?:\.\d+)+')
+# A code is at the start of the header or right after a '.', e.g. '3', '1.1' or '1.1.1'
+CODE_PATTERN = re.compile(r'(?:^|\.)\s*(\d+(?:\.\d+)*)')
 
 
 def extract_criterio_code(header: str) -> str:
