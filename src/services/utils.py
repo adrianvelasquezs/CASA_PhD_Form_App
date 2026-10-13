@@ -89,6 +89,9 @@ def unify(df: pd.DataFrame) -> pd.DataFrame:
     df['Estudiante'] = df[estudiante_cols].bfill(axis=1).iloc[:, 0]
     df['Curso y sección'] = df[curso_cols].bfill(axis=1).iloc[:, 0]
 
+    # Replace tabs and repeated spaces between names with a single space
+    df['Estudiante'] = df['Estudiante'].str.replace(r'\s+', ' ', regex=True).str.strip()
+
     # Remove index 0 of estudiante_cols and curso_cols
     estudiante_cols = estudiante_cols[1:]
     curso_cols = curso_cols[1:]
