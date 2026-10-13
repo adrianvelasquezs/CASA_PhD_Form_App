@@ -6,6 +6,7 @@ author: Adrian Velasquez
 
 import os
 import platform
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -37,6 +38,7 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = unify(df)
     df = transpose(df)
+    df = extract_criterio_codes(df)
     df = encode(df)
     final_df = df.drop(
         columns=[
@@ -87,6 +89,9 @@ def unify(df: pd.DataFrame) -> pd.DataFrame:
     df['Estudiante'] = df[estudiante_cols].bfill(axis=1).iloc[:, 0]
     df['Curso y sección'] = df[curso_cols].bfill(axis=1).iloc[:, 0]
 
+    # Replace tabs and repeated spaces between names with a single space
+    df['Estudiante'] = df['Estudiante'].str.replace(r'\s+', ' ', regex=True).str.strip()
+
     # Remove index 0 of estudiante_cols and curso_cols
     estudiante_cols = estudiante_cols[1:]
     curso_cols = curso_cols[1:]
@@ -113,6 +118,34 @@ def transpose(df: pd.DataFrame) -> pd.DataFrame:
     melted_df = df.melt(id_vars=non_criteria, value_vars=criteria_cols, var_name='Criterio de aprendizaje',
                         value_name='Calificación').dropna(subset=['Calificación'])
     return melted_df
+
+
+# A code is at the start of the header or right after a '.', e.g. '3', '1.1' or '1.1.1'
+CODE_PATTERN = re.compile(r'(?:^|\.)\s*(\d+(?:\.\d+)*)')
+
+
+def extract_criterio_code(header: str) -> str:
+    """
+    Extract the criterio de aprendizaje code from a form column header.
+    Headers follow the pattern '<objetivo code> <objetivo>.<criterio code> - <criterio>',
+    e.g. '1.1 Identificará problemas ....1.1.1 - El estudiante ...' -> '1.1.1'
+    :param header: Column header of the criterio de aprendizaje
+    :return: Code of the criterio, or the original header if no code is found
+    """
+    codes = CODE_PATTERN.findall(str(header))
+    if len(codes) >= 2:
+        return codes[1]
+    return codes[0] if codes else str(header)
+
+
+def extract_criterio_codes(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Replace the full criterio de aprendizaje text with its code
+    :param df: Transposed dataframe
+    :return: Dataframe with only the code of each criterio de aprendizaje
+    """
+    df['Criterio de aprendizaje'] = df['Criterio de aprendizaje'].map(extract_criterio_code)
+    return df
 
 
 def encode(df: pd.DataFrame) -> pd.DataFrame:
